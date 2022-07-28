@@ -23,26 +23,40 @@
   <body>
     <ul id="messages"></ul>
     <form id="form" action="">
-      <input title="Input Text" id="input" type="text" name="Text"/><button type="submit">Send by <sup> <script>document.write(name)</script></sup></button>
+      
+      <input title="Input Text" id="input" onchange="onchangeValue(this.value)" type="text" name="Text"/><button type="submit">Send by <sup> <script>document.write(name)</script></sup></button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
       var name = '';
+      var to = '';
       do{
-        var name = window.prompt("Please Enter Name?")
+        name = window.prompt("Please Enter User Name?");
+        to = window.prompt("Please Enter the Partner User Name")
       }while(name === '')
       var messages = document.getElementById('messages');
       var form = document.getElementById('form');
       var input = document.getElementById('input');
-    
+      function onchangeValue(e){
+          socket.emit("writing",{
+          writer: name,
+          for: to
+        })
+      }
+
+      socket.on('writing', function(msg) {
+        alert('Partner is Writing');
+      });
+
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value) {
-          socket.emit('chat message', {
+          socket.emit('User', {
             sender: name,
-            msg: input.value
+            msg: input.value,
+            to: to
           });
 
           var item = document.createElement('li');
@@ -56,13 +70,24 @@
         }
       });
     
-      socket.on('chat message', function(msg) {
+      socket.on('User', function(msg) {
+
         var item = document.createElement('li');
         item.style.backgroundColor = "#efefef";
         item.textContent = msg.sender + ": " + msg.msg ;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
       });
+
+      socket.emit('User', {
+            sender: name,
+            msg: 'Both Users are Online',
+            to: to
+          });
+      socket.on('Indicator',function(msg) {
+        alert(msg)
+      })
+     
     </script>
   </body>
 </body>
